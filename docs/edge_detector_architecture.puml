@@ -1,0 +1,18 @@
+@startuml
+
+interface IEdgeDetector {
+  +detectEdges()
+}
+
+class SobelDetector {
+  +detectEdges()
+}
+
+class PrewittDetector {
+  +detectEdges()
+}
+
+IEdgeDetector <|-- SobelDetector
+IEdgeDetector <|-- PrewittDetector
+
+@enduml
