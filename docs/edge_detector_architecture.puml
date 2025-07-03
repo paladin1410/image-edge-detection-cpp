@@ -1,5 +1,11 @@
 @startuml
 
+class Image {
+  +loadFromFile(filepath: string) : Image
+  +saveToFile(filepath: string) : void
+  +toGrayscale() : Image
+}
+
 interface IEdgeDetector {
   +detectEdges()
 }
@@ -14,5 +20,8 @@ class PrewittDetector {
 
 IEdgeDetector <|-- SobelDetector
 IEdgeDetector <|-- PrewittDetector
+
+note right of Image : Image File I/O
+note left of IEdgeDetector : Edge Detection Algorithm
 
 @enduml

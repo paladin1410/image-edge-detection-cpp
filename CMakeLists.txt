@@ -5,5 +5,12 @@ project(EdgeDetection)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Create executable from main.cpp
-add_executable(edge_detector src/main.cpp)
+# Include directories
+include_directories(include)
+include_directories(third_party)
+
+# Create executable from all source files
+add_executable(edge_detector 
+    src/main.cpp 
+    src/Image.cpp
+)
