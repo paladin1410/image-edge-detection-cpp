@@ -42,3 +42,6 @@
 
 # Build directory
 build/
+
+# Data directory
+sample_images/
