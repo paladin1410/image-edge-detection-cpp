@@ -45,3 +45,6 @@ build/
 
 # Data directory
 sample_images/
+
+# vscode directory
+.vscode/
