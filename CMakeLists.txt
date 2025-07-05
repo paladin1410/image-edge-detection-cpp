@@ -15,3 +15,10 @@ add_executable(edge_detector
     src/Image.cpp
     src/EdgeDetector.cpp
 )
+ 
+# Create test executable
+add_executable(tests
+    tests/test_suite.cpp
+    src/Image.cpp
+    src/EdgeDetector.cpp
+)
