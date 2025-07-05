@@ -13,4 +13,5 @@ include_directories(third_party)
 add_executable(edge_detector 
     src/main.cpp 
     src/Image.cpp
+    src/EdgeDetector.cpp
 )
