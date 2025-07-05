@@ -25,13 +25,13 @@ int main(int argc, char* argv[]) {
         std::cout << "\nTesting grayscale conversion..." << std::endl;
         Image grayImg = img.toGrayscale();
         
-        // // Test image saving  
-        // std::cout << "\nTesting image saving..." << std::endl;
-        // grayImg.saveToFile("sample_images/output_gray.png");
+        // Test image saving  
+        std::cout << "\nTesting image saving..." << std::endl;
+        grayImg.saveToFile("sample_images/output_gray.png");
         
         // Test Sobel edge detection
         std::cout << "\nTesting Sobel edge detection..." << std::endl;
-        Image sobelEdges = EdgeDetector::detectEdges(img, "Sobel");
+        Image sobelEdges = EdgeDetector::detectEdges(grayImg, "Sobel");
         sobelEdges.saveToFile("sample_images/sobel_edges.png");
         
         // Test Prewitt edge detection
