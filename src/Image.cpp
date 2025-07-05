@@ -10,6 +10,21 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+Image::Image(std::vector<uint8_t> data, int width, int height, int channels) 
+    : data(std::move(data)), width(width), height(height), channels(channels) {
+    
+    // Basic validation
+    if (width <= 0 || height <= 0 || channels <= 0) {
+        throw std::invalid_argument("Invalid image dimensions or channel count");
+    }
+    
+    size_t expectedSize = static_cast<size_t>(width) * height * channels;
+    if (this->data.size() != expectedSize) {
+        throw std::invalid_argument("Data size doesn't match dimensions");
+    }
+}
+
+
 Image Image::loadFromFile(const std::string& filepath) {
     // Validate file path
     if (filepath.empty()) {
@@ -26,58 +41,56 @@ Image Image::loadFromFile(const std::string& filepath) {
         throw std::runtime_error("Error accessing file: " + filepath + " (" + ec.message() + ")");
     }
 
-    Image img;
+    // Image property variables
+    int width, height, channels;
     
     // Load image using STB with error checking
-    unsigned char* data = stbi_load(filepath.c_str(), &img.width, &img.height, &img.channels, 0);
-    if (!data) {
+    unsigned char* raw_data = stbi_load(filepath.c_str(), &width, &height, &channels, 0);
+    if (!raw_data) {
         std::string stb_error = stbi_failure_reason() ? stbi_failure_reason() : "Unknown STB error";
         throw std::runtime_error("Failed to load image '" + filepath + "': " + stb_error);
     }
 
     // Validate image dimensions
-    if (img.width <= 0 || img.height <= 0) {
-        stbi_image_free(data);
-        throw std::runtime_error("Invalid image dimensions: " + std::to_string(img.width) + "x" + std::to_string(img.height));
+    if (width <= 0 || height <= 0) {
+        stbi_image_free(raw_data);
+        throw std::runtime_error("Invalid image dimensions: " + std::to_string(width) + "x" + std::to_string(height));
     }
 
     // Check for edge detection minimum requirements
-    if (img.width < 3 || img.height < 3) {
-        stbi_image_free(data);
+    if (width < 3 || height < 3) {
+        stbi_image_free(raw_data);
         throw std::runtime_error("Image too small for edge detection (minimum 3x3): " + 
-                                std::to_string(img.width) + "x" + std::to_string(img.height));
+                                std::to_string(width) + "x" + std::to_string(height));
     }
 
     // Validate channel count
-    if (img.channels < 1 || img.channels > 4) {
-        stbi_image_free(data);
-        throw std::runtime_error("Unsupported channel count: " + std::to_string(img.channels) + 
+    if (channels < 1 || channels > 4) {
+        stbi_image_free(raw_data);
+        throw std::runtime_error("Unsupported channel count: " + std::to_string(channels) + 
                                 " (supported: 1-4 channels)");
     }
 
     // Check memory requirements
-    size_t dataSize = static_cast<size_t>(img.width) * img.height * img.channels;
+    size_t dataSize = static_cast<size_t>(width) * height * channels;
     constexpr size_t MAX_IMAGE_SIZE = 100 * 1024 * 1024; // 100MB limit
     if (dataSize > MAX_IMAGE_SIZE) {
-        stbi_image_free(data);
+        stbi_image_free(raw_data);
         throw std::runtime_error("Image too large: " + std::to_string(dataSize) + 
                                 " bytes (limit: " + std::to_string(MAX_IMAGE_SIZE) + ")");
     }
 
-    // Copy data to vector with exception safety
-    try {
-        img.data.assign(data, data + dataSize);
-    } catch (const std::exception& e) {
-        stbi_image_free(data);
-        throw std::runtime_error("Memory allocation failed for image data: " + std::string(e.what()));
-    }
+    // Copy raw data into a std::vector
+    std::vector<uint8_t> pixel_data(raw_data, raw_data + dataSize);
 
-    // Free STB memory
-    stbi_image_free(data);
+    // Free the original STB data 
+    stbi_image_free(raw_data);
 
-    std::cout << "Loaded image: " << img.width << "x" << img.height 
-              << " (" << img.channels << " channels)" << std::endl;
-    return img;
+    std::cout << "Loaded image: " << width << "x" << height 
+              << " (" << channels << " channels)" << std::endl;
+              
+    // Return the Image object
+    return Image(pixel_data, width, height, channels);
 }
 
 void Image::saveToFile(const std::string& filepath) const {
@@ -128,7 +141,7 @@ Image Image::toGrayscale() const {
         throw std::runtime_error("Cannot convert invalid image to grayscale");
     }
 
-    // Check if image is already in grayscale format
+    // If the image is already grayscale, return a copy of the current object
     if (channels == 1) {
         return *this;
     }
@@ -142,33 +155,26 @@ Image Image::toGrayscale() const {
     // Validate data size consistency
     size_t expectedSize = static_cast<size_t>(width) * height * channels;
     if (data.size() != expectedSize) {
-        throw std::runtime_error("Image data corrupted. Expected size: " + 
-                                std::to_string(expectedSize) + ", Actual: " + 
+        throw std::runtime_error("Image data corrupted. Expected size: " +
+                                std::to_string(expectedSize) + ", Actual: " +
                                 std::to_string(data.size()));
     }
 
-    Image grayImg;
-    grayImg.width = width;
-    grayImg.height = height;
-    grayImg.channels = 1;
+    // Create a new vector to hold the grayscale pixel data
+    std::vector<uint8_t> gray_data(width * height);
 
-    // Allocate memory with error checking
-    try {
-        grayImg.data.resize(width * height);
-    } catch (const std::exception& e) {
-        throw std::runtime_error("Memory allocation failed for grayscale conversion: " + std::string(e.what()));
-    }
-
-    // Convert RGB to grayscale using luminosity formula
+    // Convert RGB to grayscale using the luminosity formula
     for (int i = 0; i < width * height; ++i) {
-        uint8_t r = data[i * channels + 0];
-        uint8_t g = data[i * channels + 1];
-        uint8_t b = data[i * channels + 2];
+        uint8_t r = data[static_cast<size_t>(i) * channels + 0];
+        uint8_t g = data[static_cast<size_t>(i) * channels + 1];
+        uint8_t b = data[static_cast<size_t>(i) * channels + 2];
         
         // Luminosity formula
-        grayImg.data[i] = static_cast<uint8_t>(0.299 * r + 0.587 * g + 0.114 * b);
+        gray_data[i] = static_cast<uint8_t>(0.299 * r + 0.587 * g + 0.114 * b);
     }
 
     std::cout << "Converted to grayscale" << std::endl;
-    return grayImg;
+    
+    // Use the new constructor to create and return the grayscale Image object
+    return Image(gray_data, width, height, 1);
 }
