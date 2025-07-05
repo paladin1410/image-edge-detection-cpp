@@ -1,6 +1,7 @@
 #include <iostream>       
 #include <exception>      
 #include "Image.h"        
+#include "EdgeDetector.h"
 
 int main(int argc, char* argv[]) {
     // Check if image path provided
@@ -24,14 +25,29 @@ int main(int argc, char* argv[]) {
         std::cout << "\nTesting grayscale conversion..." << std::endl;
         Image grayImg = img.toGrayscale();
         
-        // Test image saving  
-        std::cout << "\nTesting image saving..." << std::endl;
-        grayImg.saveToFile("sample_images/output_gray.png");
+        // // Test image saving  
+        // std::cout << "\nTesting image saving..." << std::endl;
+        // grayImg.saveToFile("sample_images/output_gray.png");
         
-        std::cout << "\n✅ All image operations successful!" << std::endl;
+        // Test Sobel edge detection
+        std::cout << "\nTesting Sobel edge detection..." << std::endl;
+        Image sobelEdges = EdgeDetector::detectEdges(img, "Sobel");
+        sobelEdges.saveToFile("sample_images/sobel_edges.png");
+        
+        // Test Prewitt edge detection
+        std::cout << "\nTesting Prewitt edge detection..." << std::endl;
+        Image prewittEdges = EdgeDetector::detectEdges(img, "Prewitt");
+        prewittEdges.saveToFile("sample_images/prewitt_edges.png");
+        
+        std::cout << "\n All image operations successful!" << std::endl;
+        std::cout << "Grayscale result: sample_images/output_gray.png" << std::endl;
+        std::cout << "Sobel edges: sample_images/sobel_edges.png" << std::endl;
+        std::cout << "Prewitt edges: sample_images/prewitt_edges.png" << std::endl;
+
+        std::cout << "\n All image operations successful!" << std::endl;
         
     } catch (const std::exception& e) {
-        std::cout << "\n❌ Error: " << e.what() << std::endl;
+        std::cout << "\n Error: " << e.what() << std::endl;
         return 1;
     }
     
