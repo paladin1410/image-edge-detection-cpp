@@ -17,6 +17,10 @@ private:
     static const int PREWITT_X[3][3];
     static const int PREWITT_Y[3][3];
 
+    // Create padded image to handle boundary problem in edge detection
+    static std::vector<uint8_t> createPaddedImage(const std::vector<uint8_t>& originalData,
+                                                  int width, int height, int padSize = 1);
+
     // Helper function to apply a 3x3 kernel to a pixel
     static int applyKernel(const std::vector<uint8_t>& imageData, int width, int x, int y, const int kernel[3][3]);
 

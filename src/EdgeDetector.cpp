@@ -49,20 +49,75 @@ Image EdgeDetector::detectEdges(const Image& image, const std::string& operatorN
         throw std::invalid_argument("Unknown edge detection operator: " + operatorName);
     }
 
-    std::vector<uint8_t> resultData(width * height, 0);
-
-    // 3. Apply edge detection (skip border pixels)
-    for (int y = 1; y < height - 1; ++y) {
-        for (int x = 1; x < width - 1; ++x) {
-            int gx = applyKernel(imageData, width, x, y, kernelX);
-            int gy = applyKernel(imageData, width, x, y, kernelY);
+    // Create padded image
+    std::vector<uint8_t> paddedData = createPaddedImage(imageData, width, height, 1);
+    int paddedWidth = width + 2;
+    
+    // Apply edge detection on padded image
+    std::vector<uint8_t> resultData(width * height);
+    
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            // Coordinates in padded image (offset by 1)
+            int paddedX = x + 1;
+            int paddedY = y + 1;
+            
+            // Apply kernels
+            int gx = applyKernel(paddedData, paddedWidth, paddedX, paddedY, kernelX);
+            int gy = applyKernel(paddedData, paddedWidth, paddedX, paddedY, kernelY);
+            
+            // Calculate magnitude and store in original coordinates
             uint8_t magnitude = calculateMagnitude(gx, gy);
             resultData[y * width + x] = magnitude;
         }
     }
 
-    // 4. Return a new Image object with the edge data.
+    // Return a new Image object with the edge data.
     return Image(resultData, width, height, 1);
+}
+
+std::vector<uint8_t> EdgeDetector::createPaddedImage(const std::vector<uint8_t>& originalData,
+                                                     int width, int height, int padSize) {
+    int paddedWidth = width + 2 * padSize;
+    int paddedHeight = height + 2 * padSize;
+    std::vector<uint8_t> paddedData(paddedWidth * paddedHeight);
+
+    // Copy original image to center of padded image
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int originalIndex = y * width + x;
+            int paddedIndex = (y + padSize) * paddedWidth + (x + padSize);
+            paddedData[paddedIndex] = originalData[originalIndex];
+        }
+    }
+
+    // Replicate top and bottom borders
+    for (int y = 0; y < padSize; ++y) {
+        for (int x = padSize; x < paddedWidth - padSize; ++x) {
+            // Top border: replicate first row
+            paddedData[y * paddedWidth + x] = 
+                paddedData[padSize * paddedWidth + x];
+            
+            // Bottom border: replicate last row
+            paddedData[(paddedHeight - 1 - y) * paddedWidth + x] = 
+                paddedData[(paddedHeight - 1 - padSize) * paddedWidth + x];
+        }
+    }
+    
+    // Replicate left and right borders
+    for (int y = 0; y < paddedHeight; ++y) {
+        for (int x = 0; x < padSize; ++x) {
+            // Left border: replicate first column
+            paddedData[y * paddedWidth + x] = 
+                paddedData[y * paddedWidth + padSize];
+            
+            // Right border: replicate last column
+            paddedData[y * paddedWidth + (paddedWidth - 1 - x)] = 
+                paddedData[y * paddedWidth + (paddedWidth - 1 - padSize)];
+        }
+    }
+
+    return paddedData;
 }
 
 int EdgeDetector::applyKernel(
