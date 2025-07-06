@@ -1,27 +1,58 @@
 @startuml
+' Add a title
+title Edge Detection System - Class Diagram
 
+' Simple color scheme
+skinparam classBackgroundColor lightblue
+skinparam classBorderColor black
+skinparam classFontSize 12
+
+' Image class
 class Image {
-  +loadFromFile(filepath: string) : Image
-  +saveToFile(filepath: string) : void
-  +toGrayscale() : Image
+  - data: vector<uint8_t>
+  - width: int
+  - height: int
+  - channels: int
+  __
+  + Image(data, width, height, channels)
+  + {static} loadFromFile(filepath: string): Image
+  + saveToFile(filepath: string): void
+  + toGrayscale(): Image
+  + getWidth(): int
+  + getHeight(): int
+  + getChannels(): int
+  + getData(): const vector<uint8_t>&
 }
 
-interface IEdgeDetector {
-  +detectEdges()
+' EdgeDetector class
+class EdgeDetector {
+  - {static} SOBEL_X[3][3]: int
+  - {static} SOBEL_Y[3][3]: int
+  - {static} PREWITT_X[3][3]: int
+  - {static} PREWITT_Y[3][3]: int
+  __
+  + {static} detectEdges(image: Image, operatorName: string): Image
+  - {static} createPaddedImage(data, width, height, padSize): vector<uint8_t>
+  - {static} applyKernel(data, width, x, y, kernel): int
+  - {static} calculateMagnitude(gx, gy): uint8_t
 }
 
-class SobelDetector {
-  +detectEdges()
-}
+' Relationship
+EdgeDetector ..> Image : uses
 
-class PrewittDetector {
-  +detectEdges()
-}
+' Notes
+note right of Image
+  Handles image data and I/O
+  - Loads images using STB library
+  - Converts to grayscale
+  - Saves results as PNG
+end note
 
-IEdgeDetector <|-- SobelDetector
-IEdgeDetector <|-- PrewittDetector
-
-note right of Image : Image File I/O
-note left of IEdgeDetector : Edge Detection Algorithm
+note left of EdgeDetector
+  Implements edge detection
+  - Sobel operator
+  - Prewitt operator
+  - Handles padding for borders
+end note
 
 @enduml
