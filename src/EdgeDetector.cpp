@@ -2,7 +2,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <algorithm>
-
+#include <cctype>     
 // Sobel kernels
 const int EdgeDetector::SOBEL_X[3][3] = {
     {-1, 0, 1},
@@ -28,26 +28,48 @@ const int EdgeDetector::PREWITT_Y[3][3] = {
 };
 
 Image EdgeDetector::detectEdges(const Image& image, const std::string& operatorName) {
+
+    // Validate operator name first
+    std::string lowerOp = operatorName;
+    std::transform(lowerOp.begin(), lowerOp.end(), lowerOp.begin(), ::tolower);
+    if (lowerOp != "sobel" && lowerOp != "prewitt") {
+        throw std::invalid_argument("Unknown edge detection operator: " + operatorName + 
+                                  ". Supported operators: 'Sobel', 'Prewitt' (case-insensitive)");
+    }
+    
+    // Validate image dimensions before processing
+    int width = image.getWidth();
+    int height = image.getHeight();
+    
+    if (width < 3 || height < 3) {
+        throw std::runtime_error("Image too small for edge detection. Minimum size: 3x3, "
+                                "Actual size: " + std::to_string(width) + "x" + std::to_string(height));
+    }
+    
+    // Validate image data integrity
+    const std::vector<uint8_t>& originalData = image.getData();
+    size_t expectedSize = static_cast<size_t>(width) * height * image.getChannels();
+    if (originalData.empty() || originalData.size() != expectedSize) {
+        throw std::runtime_error("Invalid image data. Expected size: " + std::to_string(expectedSize) + 
+                                ", Actual size: " + std::to_string(originalData.size()));
+    }
+
     // Edge detection works on grayscale images.
     Image grayImage = image.toGrayscale();
 
-    int width = grayImage.getWidth();
-    int height = grayImage.getHeight();
     const std::vector<uint8_t>& imageData = grayImage.getData();
 
     // Select the appropriate kernels based on the operator name.
     const int (*kernelX)[3];
     const int (*kernelY)[3];
 
-    if (operatorName == "Sobel") {
+    if (lowerOp == "sobel") {
         kernelX = SOBEL_X;
         kernelY = SOBEL_Y;
-    } else if (operatorName == "Prewitt") {
+    } else {
         kernelX = PREWITT_X;
         kernelY = PREWITT_Y;
-    } else {
-        throw std::invalid_argument("Unknown edge detection operator: " + operatorName);
-    }
+    } 
 
     // Create padded image
     std::vector<uint8_t> paddedData = createPaddedImage(imageData, width, height, 1);

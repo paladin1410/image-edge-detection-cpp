@@ -172,32 +172,44 @@ bool test_edge_detector_invalid_operator() {
     }
 }
 
-bool test_edge_detector_case_sensitivity() {
-    // Test: Operator names are case-sensitive
+bool test_edge_detector_case_insensitive() {
+    // Test: Operator names are case-insensitive
     std::vector<uint8_t> data(9, 128);
     Image testImage(data, 3, 3, 1);
     
+    std::cout << "\n  Testing case insensitivity with various cases...";
+    
     try {
-        EdgeDetector::detectEdges(testImage, "sobel"); // lowercase
-        return false; // Should have thrown
-    } catch (const std::invalid_argument&) {
-        return true; // Expected - case sensitive
-    } catch (...) {
-        return false; // Wrong exception type
+        // Test lowercase
+        Image result1 = EdgeDetector::detectEdges(testImage, "sobel");
+        std::cout << "  'sobel' (lowercase) worked ✅";
+        
+        // Test uppercase  
+        Image result2 = EdgeDetector::detectEdges(testImage, "PREWITT");
+        std::cout << "  'PREWITT' (uppercase) worked ✅";
+        
+        // Test mixed case
+        Image result3 = EdgeDetector::detectEdges(testImage, "SoBel");
+        std::cout << "  'SoBel' (mixed case) worked ✅";
+        
+        return true; // All should work now
+        
+    } catch (const std::exception& e) {
+        std::cout << "  Unexpected exception: " << e.what() << std::endl;
+        return false; // Should not throw
     }
 }
 
 bool test_edge_detector_too_small_image() {
-    // Test: Image smaller than 3x3 should throw
     std::vector<uint8_t> tinyData = {255, 128, 64, 32}; // 2x2 image
     Image tinyImage(tinyData, 2, 2, 1);
-    
+        
     try {
         EdgeDetector::detectEdges(tinyImage, "Sobel");
         return false; // Should have thrown
-    } catch (const std::runtime_error&) {
+    } catch (const std::runtime_error& e) {
         return true; // Expected
-    } catch (...) {
+    } catch (const std::exception& e) {
         return false; // Wrong exception type
     }
 }
@@ -230,35 +242,11 @@ bool test_edge_detector_different_operators_produce_different_results() {
     };
     Image testImage(testData, 5, 5, 1);
     
-    std::cout << "\n  DEBUG: Input image (5x5):" << std::endl;
-    std::cout << "  ";
-    for (int i = 0; i < 25; ++i) {
-        if (i > 0 && i % 5 == 0) std::cout << "\n  ";
-        std::cout << std::setw(3) << (int)testData[i] << " ";
-    }
-    std::cout << std::endl;
-    
     Image sobelResult = EdgeDetector::detectEdges(testImage, "Sobel");
     Image prewittResult = EdgeDetector::detectEdges(testImage, "Prewitt");
     
     const auto& sobelData = sobelResult.getData();
     const auto& prewittData = prewittResult.getData();
-    
-    std::cout << "  DEBUG: Sobel result:" << std::endl;
-    std::cout << "  ";
-    for (int i = 0; i < 25; ++i) {
-        if (i > 0 && i % 5 == 0) std::cout << "\n  ";
-        std::cout << std::setw(3) << (int)sobelData[i] << " ";
-    }
-    std::cout << std::endl;
-    
-    std::cout << "  DEBUG: Prewitt result:" << std::endl;
-    std::cout << "  ";
-    for (int i = 0; i < 25; ++i) {
-        if (i > 0 && i % 5 == 0) std::cout << "\n  ";
-        std::cout << std::setw(3) << (int)prewittData[i] << " ";
-    }
-    std::cout << std::endl;
     
     // Check for differences
     int differences = 0;
@@ -267,8 +255,6 @@ bool test_edge_detector_different_operators_produce_different_results() {
             differences++;
         }
     }
-    
-    std::cout << "  DEBUG: Found " << differences << " different pixels out of " << sobelData.size() << std::endl;
     
     // Results should be different for at least some pixels
     return differences > 0;
@@ -434,7 +420,7 @@ int main() {
     std::cout << "\n--- EDGEDETECTOR CLASS UNIT TESTS ---" << std::endl;
     runTest("EdgeDetector Operator Selection", test_edge_detector_operator_selection);
     runTest("EdgeDetector Invalid Operator", test_edge_detector_invalid_operator);
-    runTest("EdgeDetector Case Sensitivity", test_edge_detector_case_sensitivity);
+    runTest("EdgeDetector Case Insensitivity", test_edge_detector_case_insensitive);
     runTest("EdgeDetector Too Small Image", test_edge_detector_too_small_image);
     runTest("EdgeDetector RGB Conversion", test_edge_detector_rgb_conversion);
     runTest("EdgeDetector Different Operators Produce Different Results", test_edge_detector_different_operators_produce_different_results);
