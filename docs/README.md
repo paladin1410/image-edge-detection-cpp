@@ -107,6 +107,12 @@ See the [class diagram](edge_detector_architecture.png) showing how the edge det
 - Git 
 - STB image library (included as headers)
 
+## Tested Environment
+
+- OS: Ubuntu 20.04.6 LTS
+- Compiler: GCC 9.4.0
+- CMake: 3.16.3
+
 ## Testing Suite
 
 The project includes comprehensive unit and integration tests.
