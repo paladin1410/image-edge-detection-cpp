@@ -90,7 +90,13 @@ This program detects edges in images using two different algorithms:
 - **Sobel** - Uses Sobel operators for gradient calculation
 - **Prewitt** - Uses Prewitt operators for gradient calculation
 
-The program automatically converts color images to grayscale before edge detection and handles various image formats (PNG, JPG, etc.).
+**Image Processing Pipeline:**
+
+- Grayscale images - Processed directly for edge detection
+- Color images (RGB/RGBA) - Automatically converted to grayscale using ITU-R BT.601 luminosity formula before edge detection
+- Output - Always grayscale image showing detected edges (white=edges, black=background)
+
+The program handles various image formats (PNG, JPG, etc.) and uses 3x3 convolution kernels with boundary padding for robust edge detection.
 
 ## Architecture
 
