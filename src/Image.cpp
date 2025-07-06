@@ -85,9 +85,6 @@ Image Image::loadFromFile(const std::string& filepath) {
 
     // Free the original STB data 
     stbi_image_free(raw_data);
-
-    std::cout << "Loaded image: " << width << "x" << height 
-              << " (" << channels << " channels)" << std::endl;
               
     // Return the Image object
     return Image(pixel_data, width, height, channels);
@@ -132,7 +129,6 @@ void Image::saveToFile(const std::string& filepath) const {
                                 " (possible: disk full, permission denied, or invalid path)");
     }
 
-    std::cout << "Saved image: " << filepath << std::endl;
 }
 
 Image Image::toGrayscale() const {
@@ -173,8 +169,6 @@ Image Image::toGrayscale() const {
         gray_data[i] = static_cast<uint8_t>(0.299 * r + 0.587 * g + 0.114 * b);
     }
 
-    std::cout << "Converted to grayscale" << std::endl;
-    
     // Use the new constructor to create and return the grayscale Image object
     return Image(gray_data, width, height, 1);
 }
