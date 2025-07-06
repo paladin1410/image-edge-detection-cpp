@@ -5,11 +5,13 @@
 #include <filesystem>
 #include <limits>
 
+// STB Image Library integration for cross-platform image I/O
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+// Image Constructor with validations to ensure data integrity for image processing
 Image::Image(std::vector<uint8_t> data, int width, int height, int channels) 
     : data(std::move(data)), width(width), height(height), channels(channels) {
     

@@ -3,10 +3,12 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cctype>     
-// Sobel kernels
+
+// Sobel operators: Emphasize central pixels with weight 2
+// Better noise reduction compared to Prewitt operators
 const int EdgeDetector::SOBEL_X[3][3] = {
-    {-1, 0, 1},
-    {-2, 0, 2},
+    {-1, 0, 1},  // Detects vertical edges (horizontal gradient)
+    {-2, 0, 2},  // Central row has double weight
     {-1, 0, 1}
 };
 const int EdgeDetector::SOBEL_Y[3][3] = {
@@ -15,10 +17,11 @@ const int EdgeDetector::SOBEL_Y[3][3] = {
     { 1,  2,  1}
 };
 
-// Prewitt kernels
+// Prewitt operators: Equal weight distribution
+// Simpler computation, slightly more noise sensitive
 const int EdgeDetector::PREWITT_X[3][3] = {
-    {-1, 0, 1},
-    {-1, 0, 1},
+    {-1, 0, 1},  // Detects vertical edges (horizontal gradient)  
+    {-1, 0, 1},  // Equal weights across rows
     {-1, 0, 1}
 };
 const int EdgeDetector::PREWITT_Y[3][3] = {
@@ -98,6 +101,8 @@ Image EdgeDetector::detectEdges(const Image& image, const std::string& operatorN
     return Image(resultData, width, height, 1);
 }
 
+// Border replication padding: Extends edge pixels to handle boundary conditions
+// Alternative approaches: zero-padding, mirror-padding, wrap-around
 std::vector<uint8_t> EdgeDetector::createPaddedImage(const std::vector<uint8_t>& originalData,
                                                      int width, int height, int padSize) {
     int paddedWidth = width + 2 * padSize;
@@ -142,6 +147,8 @@ std::vector<uint8_t> EdgeDetector::createPaddedImage(const std::vector<uint8_t>&
     return paddedData;
 }
 
+// Multiply each pixel by corresponding kernel value and sum
+// Result represents gradient strength in kernel direction
 int EdgeDetector::applyKernel(
     const std::vector<uint8_t>& imageData,
     int width,
@@ -159,6 +166,8 @@ int EdgeDetector::applyKernel(
     return sum;
 }
 
+// Euclidean norm: sqrt(gx² + gy²) gives gradient magnitude
+// Represents edge strength regardless of direction
 uint8_t EdgeDetector::calculateMagnitude(int gx, int gy) {
     double magnitude = std::sqrt(static_cast<double>(gx) * gx + static_cast<double>(gy) * gy);
     return static_cast<uint8_t>(std::min(255.0, magnitude));
